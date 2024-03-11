@@ -1,5 +1,5 @@
 //Project: Pizza Order Processing System
-//Purpose Details: This project aims to demonstrate the serialization and deserialization of Pizza objects using JSON and RabbitMQ for communication.
+//Purpose Details: This project is for handling pizza orders. It helps serialize and deserialize pizza information using JSON and RabbitMQ.
 //Course: IST242
 //Author: Charlie Defelice
 //Date Developed: 3/9/2024
