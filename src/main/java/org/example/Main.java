@@ -10,19 +10,30 @@ package org.example;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class Main {
+public class Main
+{
 
-    public static void main(String[] args) {
-        // Deserialize the JSON string back to a Pizza object
+    public static void main(String[] args)
+    {
+        //receives pizza orders using RabbitMQ
+        Recv.receivePizzaFromQueue();
+
+        //sample JSON string representing a pizza order
         String pizzaJson = "{\"size\":\"Medium\",\"toppings\":\"Pepperoni\",\"crustType\":\"Thin Crust\"}";
+
+        //deserializes the JSON string back to a Pizza object
         ObjectMapper objectMapper = new ObjectMapper();
-        try {
+        try
+        {
             Pizza deserializedPizza = objectMapper.readValue(pizzaJson, Pizza.class);
             System.out.println("Deserialized Pizza object: " + deserializedPizza);
             System.out.println("Size: " + deserializedPizza.getSize());
             System.out.println("Toppings: " + deserializedPizza.getToppings());
             System.out.println("Crust Type: " + deserializedPizza.getCrustType());
-        } catch (Exception e) {
+        }
+
+        catch (Exception e)
+        {
             e.printStackTrace();
         }
     }
