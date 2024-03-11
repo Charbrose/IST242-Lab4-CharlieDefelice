@@ -13,7 +13,7 @@ public class Send {
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
             channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-            // Create a sample Pizza object
+            //creates a sample Pizza object
             Pizza myPizza = new Pizza("Medium", "Pepperoni", "Thin Crust");
             String message = serializePizza(myPizza); // Serialize the Pizza object
             channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
@@ -21,7 +21,7 @@ public class Send {
         }
     }
 
-    // Sample Pizza class
+    //sample Pizza class
     static class Pizza {
         private String size;
         private String toppings;
@@ -33,17 +33,17 @@ public class Send {
             this.crustType = crustType;
         }
 
-        // Getters and setters (omitted for brevity)
+        //getters and setters
     }
 
-    // Serialize the Pizza object into a JSON message
+    //serialize the Pizza object into a JSON message
     private static String serializePizza(Pizza pizza) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             return objectMapper.writeValueAsString(pizza);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
-            return ""; // Handle serialization error gracefully
+            return ""; //handles the serialization error
         }
     }
 }
