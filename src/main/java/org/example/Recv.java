@@ -1,56 +1,46 @@
 package org.example;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.*;
-
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
+import com.rabbitmq.client.Channel;
 
 public class Recv
 {
-    private final static String QUEUE_NAME = "pizza_queue";
 
-    public static void receivePizzaFromQueue()
+    private final static String QUEUE_NAME = "pizza queue";
+
+    public static void main(String[] argv) throws Exception
     {
+        //sets up RabbitMQ connection
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
-        try
+        try (Connection connection = factory.newConnection();
+             Channel channel = connection.createChannel())
         {
-            Connection connection = factory.newConnection(); //tries to establish connection
-            Channel channel = connection.createChannel();
+
+            //declares queue
             channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-            System.out.println(" [*] Waiting for pizza orders. To exit, press CTRL+C");
+            System.out.println("Waiting for Orders. To End Task Press CTRL+C");
 
+            //sets up callback for messages
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                String message = new String(delivery.getBody(), "UTF-8");
-                //deserialize the message into a Pizza object
+                byte[] messageBytes = delivery.getBody();
+                String message = new String(messageBytes, "UTF-8");
+
+                //deserializes received JSON message into the Pizza object
                 Pizza receivedPizza = deserializePizza(message);
-                System.out.println(" [x] Received pizza: " + receivedPizza);
+
+                //prints the received Pizza object details
+                System.out.println("Received Pizza Order: ");
+                receivedPizza.displayPizzaDetails();
             };
-
-            channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> {
-            });
-            //catches IOException and TimeoutException
-        }
-
-        catch (IOException | TimeoutException e)
-        {
-            e.printStackTrace();
+            //starts getting messages from queue
+            channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> {});
         }
     }
 
-    //deserializes the JSON message into a Pizza object
-    private static Pizza deserializePizza(String json)
+    //deserializes the JSON message into the Pizza object
+    private static Pizza deserializePizza(String jsonMessage)
     {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try
-        {
-            return objectMapper.readValue(json, Pizza.class);
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-            return null; //handles deserialization error
-        }
+        return Pizza.deserializeFromJson(jsonMessage);
     }
 }

@@ -4,37 +4,46 @@
 //Author: Charlie Defelice
 //Date Developed: 3/9/2024
 //Last Date Changed: 3/10/2024
-//Rev: 3.4
+//Rev: 4.2
 
 package org.example;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Main
 {
-
     public static void main(String[] args)
     {
-        //receives pizza orders using RabbitMQ
-        Recv.receivePizzaFromQueue();
+        //creates a fixed thread pool with two threads
+        ExecutorService executor = Executors.newFixedThreadPool(2);
 
-        //sample JSON string representing a pizza order
-        String pizzaJson = "{\"size\":\"Medium\",\"toppings\":\"Pepperoni\",\"crustType\":\"Thin Crust\"}";
+        //submits tasks for receiving and sending orders
+        executor.submit(() -> {
+            try
+            {
+                Recv.main(args);
+            }
 
-        //deserializes the JSON string back to a Pizza object
-        ObjectMapper objectMapper = new ObjectMapper();
-        try
-        {
-            Pizza deserializedPizza = objectMapper.readValue(pizzaJson, Pizza.class);
-            System.out.println("Deserialized Pizza object: " + deserializedPizza);
-            System.out.println("Size: " + deserializedPizza.getSize());
-            System.out.println("Toppings: " + deserializedPizza.getToppings());
-            System.out.println("Crust Type: " + deserializedPizza.getCrustType());
-        }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        });
 
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
+        executor.submit(() -> {
+            try
+            {
+                Send.main(args);
+            }
+
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        });
+
+        //shuts down the executor once tasks are done
+        executor.shutdown();
     }
 }

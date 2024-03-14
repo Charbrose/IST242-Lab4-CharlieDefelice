@@ -1,49 +1,52 @@
 package org.example;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rabbitmq.client.*;
+import com.google.gson.Gson;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Channel;
+import java.util.List;
 
-public class Send {
-    private final static String QUEUE_NAME = "pizza_queue"; // Rename the queue
+public class Send
+{
+    //name of the RabbitMQ queue
+    private final static String QUEUE_NAME = "pizza queue";
 
-    public static void main(String[] argv) throws Exception {
+    public static void main(String[] argv) throws Exception
+    {
+        //creates connection and sets RabbitMQ host
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
         try (Connection connection = factory.newConnection();
-             Channel channel = connection.createChannel()) {
+             Channel channel = connection.createChannel())
+        {
+
             channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-            //creates a sample Pizza object
-            Pizza myPizza = new Pizza("Medium", "Pepperoni", "Thin Crust");
-            String message = serializePizza(myPizza); // Serialize the Pizza object
-            channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
-            System.out.println(" [x] Sent pizza: " + myPizza);
+
+            //creates the Pizza object
+            Pizza pizzaToSend = createPizza();
+
+            //serializes the Pizza object into a JSON message
+            String jsonMessage = serializePizza(pizzaToSend);
+
+            //transfers the JSON message to RabbitMQ queue
+            channel.basicPublish("", QUEUE_NAME, null, jsonMessage.getBytes());
+            System.out.println("Sent Pizza Order: " + pizzaToSend.getPizzaName());
         }
     }
 
-    //sample Pizza class
-    static class Pizza {
-        private String size;
-        private String toppings;
-        private String crustType;
-
-        public Pizza(String size, String toppings, String crustType) {
-            this.size = size;
-            this.toppings = toppings;
-            this.crustType = crustType;
-        }
-
-        //getters and setters
+    //creates the Pizza object
+    private static Pizza createPizza()
+    {
+        Pizza pizza = new Pizza();
+        pizza.setPizzaName("Pepperoni");
+        pizza.setToppings(List.of("Cheese", "Pepperoni"));
+        return pizza;
     }
 
-    //serialize the Pizza object into a JSON message
-    private static String serializePizza(Pizza pizza) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.writeValueAsString(pizza);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return ""; //handles the serialization error
-        }
+    //serializes the Pizza object into a JSON message
+    private static String serializePizza(Pizza pizza)
+    {
+        Gson gson = new Gson();
+        return Pizza.serializeToJson(pizza);
     }
 }
